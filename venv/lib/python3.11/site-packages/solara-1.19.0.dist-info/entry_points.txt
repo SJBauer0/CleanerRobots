@@ -1,0 +1,5 @@
+[console_scripts]
+solara = solara.__main__:main
+
+[pytest11]
+solara = solara.test.pytest_plugin

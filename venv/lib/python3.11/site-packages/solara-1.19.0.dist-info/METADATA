@@ -1,0 +1,103 @@
+Metadata-Version: 2.1
+Name: solara
+Version: 1.19.0
+Project-URL: Home, https://www.github.com/widgetti/solara
+Author-email: "Maarten A. Breddels" <maartenbreddels@gmail.com>
+License: The MIT License (MIT)
+        
+        Copyright (c) 2022 Maarten A. Breddels
+        
+        Permission is hereby granted, free of charge, to any person obtaining a copy
+        of this software and associated documentation files (the "Software"), to deal
+        in the Software without restriction, including without limitation the rights
+        to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+        copies of the Software, and to permit persons to whom the Software is
+        furnished to do so, subject to the following conditions:
+        
+        The above copyright notice and this permission notice shall be included in
+        all copies or substantial portions of the Software.
+        
+        THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+        IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+        FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+        AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+        LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+        OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+        THE SOFTWARE.
+License-File: LICENSE
+Classifier: License :: OSI Approved :: MIT License
+Requires-Dist: cachetools
+Requires-Dist: click>=7.1.0
+Requires-Dist: filelock
+Requires-Dist: humanize
+Requires-Dist: ipykernel
+Requires-Dist: ipyvue>=1.9.0
+Requires-Dist: ipyvuetify>=1.8.10
+Requires-Dist: ipywidgets
+Requires-Dist: jinja2
+Requires-Dist: jupyter-client>=7.0.0
+Requires-Dist: markdown
+Requires-Dist: markupsafe
+Requires-Dist: nbformat
+Requires-Dist: pymdown-extensions
+Requires-Dist: reacton>=1.7.1
+Requires-Dist: requests
+Requires-Dist: rich-click
+Requires-Dist: starlette
+Requires-Dist: uvicorn
+Requires-Dist: watchdog
+Requires-Dist: websockets
+Provides-Extra: assets
+Requires-Dist: solara-assets==1.19.0; extra == 'assets'
+Provides-Extra: dev
+Requires-Dist: black; extra == 'dev'
+Requires-Dist: bqplot; extra == 'dev'
+Requires-Dist: bqplot-image-gl; extra == 'dev'
+Requires-Dist: bump2version; extra == 'dev'
+Requires-Dist: codespell; extra == 'dev'
+Requires-Dist: dask[dataframe]; python_version < '3.7' and extra == 'dev'
+Requires-Dist: flake8; extra == 'dev'
+Requires-Dist: mdit-py-plugins; extra == 'dev'
+Requires-Dist: mypy; extra == 'dev'
+Requires-Dist: playwright; python_version > '3.6' and extra == 'dev'
+Requires-Dist: plotly; extra == 'dev'
+Requires-Dist: pre-commit; extra == 'dev'
+Requires-Dist: pytest; extra == 'dev'
+Requires-Dist: pytest-cov; extra == 'dev'
+Requires-Dist: pytest-mock; extra == 'dev'
+Requires-Dist: pytest-playwright; python_version > '3.6' and extra == 'dev'
+Requires-Dist: pytest-timeout; extra == 'dev'
+Requires-Dist: python-dotenv; extra == 'dev'
+Requires-Dist: types-markdown; extra == 'dev'
+Requires-Dist: types-pyyaml; extra == 'dev'
+Requires-Dist: types-requests; extra == 'dev'
+Requires-Dist: vaex-core; extra == 'dev'
+Requires-Dist: vaex-hdf5; extra == 'dev'
+Requires-Dist: vaex-jupyter; extra == 'dev'
+Provides-Extra: documentation
+Requires-Dist: altair; extra == 'documentation'
+Requires-Dist: bqplot; extra == 'documentation'
+Requires-Dist: ipycanvas; extra == 'documentation'
+Requires-Dist: ipyleaflet; extra == 'documentation'
+Requires-Dist: matplotlib; extra == 'documentation'
+Requires-Dist: numpy; extra == 'documentation'
+Requires-Dist: plotly; extra == 'documentation'
+Requires-Dist: vaex-core; extra == 'documentation'
+Requires-Dist: vaex-hdf5; extra == 'documentation'
+Requires-Dist: vega-datasets; extra == 'documentation'
+Provides-Extra: extra
+Requires-Dist: numpy; extra == 'extra'
+Requires-Dist: pillow; extra == 'extra'
+Requires-Dist: pygments; extra == 'extra'
+Requires-Dist: pygments==2.10; python_version < '3.7' and extra == 'extra'
+Provides-Extra: flask
+Requires-Dist: flask; extra == 'flask'
+Requires-Dist: flask-sock; extra == 'flask'
+Provides-Extra: pytest
+Requires-Dist: jupyterlab; extra == 'pytest'
+Requires-Dist: pillow; extra == 'pytest'
+Requires-Dist: pixelmatch; extra == 'pytest'
+Requires-Dist: playwright; python_version > '3.6' and extra == 'pytest'
+Requires-Dist: pytest; extra == 'pytest'
+Requires-Dist: pytest-playwright; python_version > '3.6' and extra == 'pytest'
+Requires-Dist: voila; extra == 'pytest'

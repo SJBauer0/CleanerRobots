@@ -1,0 +1,410 @@
+<!doctype html>
+<html>
+
+<head>
+    <title>{{title}}</title>
+    <meta charset="utf-8">
+    {{ pre_rendered_metas | safe }}
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+    <link rel="icon" type="image/png" sizes="any" href="{{root_path}}/static/assets/favicon.png">
+    <link rel="icon" type="image/svg+xml" href="{{root_path}}/static/assets/favicon.svg">
+
+    {% block header %}
+
+
+    {{ pre_rendered_css | safe }}
+
+    <link href="{{cdn}}/@widgetti/solara-vuetify-app@5.0.2/dist/main.css" rel="stylesheet"></link>
+
+
+    {% if assets.fontawesome_enabled == True %}
+    <link rel="stylesheet" href="{{cdn}}{{assets.fontawesome_path}}" type="text/css">
+    {% endif %}
+    <link href="{{root_path}}/static/highlight.css" rel="stylesheet">
+    <link href="{{root_path}}/static/highlight-dark.css" rel="stylesheet">
+    </link>
+    <link href="{{root_path}}/static/assets/style.css" rel="stylesheet">
+    </link>
+    <link href="{{root_path}}/static/assets/index.css" rel="stylesheet">
+    </link>
+    {% if theme.variant == "light" %}
+    <link href="{{root_path}}/static/assets/theme-light.css" rel="stylesheet">
+    </link>
+    {% elif theme.variant == "dark" %}
+    <link href="{{root_path}}/static/assets/theme-dark.css" rel="stylesheet">
+    </link>
+    {% endif %}
+    <link href="{{root_path}}/static/assets/custom.css" rel="stylesheet">
+    </link>
+
+    <script id="jupyter-config-data" type="application/json">
+    {
+        "baseUrl": "{{root_path}}/jupyter",
+        "kernelId": "1234"
+    }
+    </script>
+    <style>
+        {% include "loader-"~theme.loader~".css" %}
+    </style>
+    {% endblock header %}
+</head>
+{% raw -%}
+<script type="x-template" id="vue-app-template" style="display: none">
+    <v-app :key="forceUpdateTrigger" :class="loadingPage ? 'solara-page-loading' : ''">
+        <v-progress-linear :style="{visibility: (kernelBusyLong && isMounted) ? 'visible' : 'hidden'}" indeterminate
+            absolute></v-progress-linear>
+        <v-alert v-if="needsRefresh || cancelAutoRefresh" type="warning" border="left"
+            style="position: absolute; right: 0px; z-index: 100; left: 0px;">
+            App is disconnected, and may not function properly. Please refresh the page.
+        </v-alert>
+        {% endraw -%}
+        {# {% include "transition-domino.html" %} #}
+        {% include "loader-" ~ theme.loader ~ ".html" %}
+        <v-overlay :value="(connectionStatus != 'connected') & wasConnected">
+            <v-progress-circular indeterminate size="128" style="text-align: center;">Server
+                disconnected.</v-progress-circular>
+        </v-overlay>
+
+        <v-dialog v-model="needsRefresh" width="500">
+            <v-card>
+                <v-card-title class="text-h5 grey lighten-2">Please refresh the page</v-card-title>
+
+                {% if production %}
+                <v-card-text>
+                    Could not restore session. Please refresh.
+                </v-card-text>
+                {% else %}
+                <v-card-text>
+                    {% raw -%}
+                    Could not restore session. Will refresh in {{autoRefreshCount}} seconds.
+                    {% endraw -%}
+                </v-card-text>
+                {% endif %}
+
+                <v-divider></v-divider>
+
+                <v-card-actions>
+                    <v-spacer></v-spacer>
+                    <v-btn color="secondary" text @click="reload()">
+                        Refresh now
+                    </v-btn>
+                    <v-btn color="primary" text @click="setCancelAutoRefresh()">
+                        Cancel
+                    </v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
+        {% raw -%}
+
+        <v-menu v-if="debug && solaraDebugMessages && solaraDebugMessages.length" offset-y top
+            :close-on-content-click="false">
+            <template v-slot:activator="{ on }">
+                <v-btn text v-on="on" style="position: fixed; bottom: 8px; right: 8px">
+                    <span style="color: red">{{ solaraDebugMessages.length }}</span>
+                    <v-icon right large color="red">mdi-bug-outline</v-icon>
+                </v-btn>
+            </template>
+            <v-sheet class="pa-2" style="overflow: auto; max-height: 80vh">
+                <div style="display: flex" v-for="message in solaraDebugMessages" :key="message.cell" class="pa-2">
+                    <div style="width: 50px">[{{ message.cell }}]</div>
+                    <div v-if="message.traceback" class="jp-RenderedText jp-OutputArea-output"
+                        data-mime-type="application/vnd.jupyter.stderr">
+                        <pre v-html="message.traceback" class="pa-2"></pre>
+                    </div>
+                    <pre v-else><span :style="message.name === 'stderr' ? 'background-color: var(--jp-rendermime-error-background)' : ''"
+                                class="pa-2"
+                            >{{ message.text }}</span>
+                    </pre>
+                </div>
+                <div class="d-flex justify-end">
+                    <v-tooltip top>
+                        <template v-slot:activator="{ on, attrs }">
+                            <v-btn icon v-bind="attrs" v-on="on" @click="solaraDebugMessages = []">
+                                <v-icon>mdi-trash-can-outline</v-icon>
+                            </v-btn>
+                        </template>
+                        <span>Clear messages</span>
+                    </v-tooltip>
+                </div>
+            </v-sheet>
+        </v-menu>
+
+        <v-menu offset-y top :close-on-content-click="false" style="z-index: 100001">
+            <!-- <template v-slot:activator="{ on }">
+                <v-btn text v-on="on" style="position: fixed; top: 8px; right: 8px; z-index: 100000">
+                    <v-icon right large style="opacity: 0.5" :color="connectionStatus != 'connected' ? 'red' : ''">mdi-account</v-icon>
+                </v-btn>
+            </template> -->
+            <v-list>
+                <v-list-item @click="stateReset()" link>
+                    <v-list-item-icon>
+                        <v-icon>mdi-close-box</v-icon>
+                    </v-list-item-icon>
+                    <v-list-item-title>Reset application
+                    </v-list-item-title>
+                </v-list-item>
+                <v-list-item v-if="theme.variant_user_selectable">
+                    <v-btn-toggle v-model="themeVariantIndex" tile group mandatory>
+                        <v-btn value="light" icon>
+                            <v-icon>mdi-white-balance-sunny</v-icon>
+                        </v-btn>
+                        <v-btn>
+                            <v-icon>mdi-weather-night</v-icon>
+                        </v-btn>
+                        <v-btn>
+                            <v-icon>mdi-theme-light-dark</v-icon>
+                        </v-btn>
+                    </v-btn-toggle>
+                </v-list-item>
+
+            </v-list>
+        </v-menu>
+        <!-- <v-menu v-if="debug && outputMessages && outputMessages.length" offset-y top
+            :close-on-content-click="false">
+            <template v-slot:activator="{ on }">
+                <v-btn text v-on="on" style="position: fixed; top: 8px; right: 8px">
+                    <span style="color: #333">{{ outputMessages.length }}</span>
+                    <v-icon right large color="#333">mdi-information-outline</v-icon>
+                </v-btn>
+            </template>
+            <v-sheet class="pa-2" style="overflow: auto; max-height: 80vh">
+                <div style="display: flex" v-for="message in outputMessages" :key="message.cell" class="pa-2">
+                    <div style="width: 50px">[{{ message.cell }}]</div>
+                    <div v-if="message.traceback" class="jp-RenderedText jp-OutputArea-output"
+                        data-mime-type="application/vnd.jupyter.stderr">
+                        <pre v-html="message.traceback" class="pa-2"></pre>
+                    </div>
+                    <pre v-else><span :style="message.name === 'stderr' ? 'background-color: var(--jp-rendermime-error-background)' : ''"
+                                class="pa-2"
+                            >{{ message.text }}</span>
+                    </pre>
+                </div>
+                <div class="d-flex justify-end">
+                    <v-tooltip top>
+                        <template v-slot:activator="{ on, attrs }">
+                            <v-btn icon v-bind="attrs" v-on="on" @click="outputMessages = []">
+                                <v-icon>mdi-trash-can-outline</v-icon>
+                            </v-btn>
+                        </template>
+                        <span>Clear messages</span>
+                    </v-tooltip>
+                </div>
+            </v-sheet>
+        </v-menu> -->
+    </v-app>
+</script>
+{% endraw -%}
+
+<body data-base-url="{{root_path}}/static/">
+    {% if theme.variant == "light" %}
+    <div id="app" class="v-application v-application--is-ltr theme--light" data-app="true">
+    {% elif theme.variant == "dark" %}
+    <div id="app" class="v-application v-application--is-ltr theme--dark" data-app="true">
+    {% endif %}
+        {{ pre_rendered_html|safe }}
+        {# next div is used in ssg code to see if vue took over rendering #}
+        <div id="pre-rendered-html-present" style="display: none"></div>
+    </div>
+    {% if production %}
+    <script src="{{cdn}}/@widgetti/solara-vuetify-app@5.0.2/dist/solara-vuetify-app{{ipywidget_major_version}}.min.js"></script>
+    <script src="{{cdn}}/mermaid@9.1.7/dist/mermaid.min.js"></script>
+    {% else %}
+    <script src="{{cdn}}/@widgetti/solara-vuetify-app@5.0.2/dist/solara-vuetify-app{{ipywidget_major_version}}.js"></script>
+    <script src="{{cdn}}/mermaid@9.1.7/dist/mermaid.js"></script>
+    {% endif %}
+    <script>
+        solara.rootPath = {{ root_path | tojson | safe}};
+        console.log("rootPath", solara.rootPath);
+    </script>
+
+    <script src="{{root_path}}/static/assets/custom.js"></script>
+    <script src="{{root_path}}/static/assets/theme.js"></script>
+
+    <script src="{{cdn}}/requirejs@2.3.6/require.js" crossorigin="anonymous">
+    </script>
+    <script src="{{root_path}}/static/main-vuetify.js"></script>
+    <script src="{{root_path}}/static/ansi.js"></script>
+
+    <script>
+        solara.production = {{ production | tojson | safe }};
+        const themeVariants = ['light', 'dark', 'auto']
+        solara.preRendered = {{ pre_rendered_html | safe | length | tojson }} > 0
+        var theme = {{ theme | tojson | safe }}
+        if (theme.variant_user_selectable) {
+            if (localStorage.getItem('theme.variant')) {
+                theme.variant = JSON.parse(localStorage.getItem('theme.variant'))
+            }
+        }
+        function prefersDarkScheme() {
+            return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        }
+        function inDarkMode() {
+            if (theme.variant == 'auto') {
+                return prefersDarkScheme();
+            }
+            else {
+                return theme.variant == 'dark';
+            }
+        }
+    </script>
+
+    <script>
+        window.solara.browser_platform = false;
+        {% if platform == "emscripten" %}
+        window.solara.browser_platform = true;
+        {% endif %}
+        var debug = true;
+        var app = new Vue({
+            vuetify: new Vuetify({
+                theme: {
+                    dark: inDarkMode(),
+                    themes: vuetifyThemes,
+                },
+            }),
+            // if we do prerendering, keep it unmounted, and mount
+            // when loading becomes false
+            el: solara.preRendered ? null : '#app' ,
+            template: '#vue-app-template',
+            created() {
+                const original_$forceUpdate = this.$forceUpdate.bind(this);
+                this.$forceUpdate = (() => {
+                    this.forceUpdateTrigger += 1;
+                    original_$forceUpdate();
+                });
+            },
+            mounted() {
+                document.querySelector('#app').removeAttribute("style");
+                // listen to change in preferred color scheme (e.g if choosing dark in OSX)
+                window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+                    this.$vuetify.theme.dark = inDarkMode();
+                });
+            },
+            methods: {
+                stateReset() {
+                    console.log('reset')
+                    msg = { "type": "state_reset", "reason": "user command" }
+                    wsWatchdog.send(JSON.stringify(msg))
+                },
+                setCancelAutoRefresh() {
+                    this.needsRefresh = false;
+                    this.cancelAutoRefresh = true;
+                },
+                reload() {
+                    location.reload();
+                },
+            },
+            computed: {
+                themeVariantIndex: {
+                    get() {
+                        return themeVariants.indexOf(theme.variant)
+                    },
+                    set(value) {
+                        theme.variant = themeVariants[value]
+                        this.$vuetify.theme.dark = inDarkMode()
+                        localStorage.setItem('theme.variant', JSON.stringify(theme.variant))
+                    }
+                }
+            },
+            watch: {
+                kernelBusy: function (value) {
+                    if(this._lastBusyTimer) {
+                        clearTimeout(this._lastBusyTimer)
+                    }
+                    if(value) {
+                        this._lastBusyTimer = setTimeout(() => {
+                            this.kernelBusyLong = value;
+                        }, 300);
+                    } else {
+                        this.kernelBusyLong = value;
+                    }
+                },
+                loading: function (value) {
+                    // if preRendered, the app is not mounted yet
+                    // so we mount it when loading becomes false
+                    if (solara.preRendered && !this.mounted) {
+                        this.isMounted = true;
+                        this.$mount("#app")
+                    } else {
+                        this.isMounted = true;
+                    }
+                },
+                needsRefresh: function (value) {
+                    if (this.needsRefresh && !this.cancelAutoRefresh && !solara.production) {
+                        console.log('value for needRefresh', value);
+                        setTimeout(() => {
+                            console.log('this.autoRefreshCount', this.autoRefreshCount)
+                            this.autoRefreshCount = this.autoRefreshCount - 1;
+                        }, 1000);
+                    }
+                },
+                autoRefreshCount: function (value) {
+                    console.log('value for autoRefreshCount', value);
+                    if (value == 0) {
+                        if (!this.cancelAutoRefresh)
+                            this.reload();
+                    } else if (value > 0) {
+                        setTimeout(() => {
+                            console.log('this.autoRefreshCount!', this.autoRefreshCount)
+                            this.autoRefreshCount = this.autoRefreshCount - 1;
+                        }, 1000);
+                    }
+                }
+            },
+            data() {
+                return {
+                    forceUpdateTrigger: 0,
+                    loading_text: "Loading resources",
+                    loadingPercentage: -1,
+                    loading: true,
+                    title: "No title",
+                    solaraDebugMessages: [],
+                    outputMessages: [],
+                    theme: theme,
+                    debug: debug,
+                    connectionStatus: null,
+                    wasConnected: false,
+                    needsRefresh: false,
+                    cancelAutoRefresh: false,
+                    autoRefreshCount: 3,
+                    kernelBusy: false,
+                    isMounted: false,
+                    loadingPage: false,
+                    _lastBusyTimer: null,
+                    kernelBusyLong: false,
+                    // outputMessages: [{ name: 'stderr', text: 'lala' }],
+                }
+            }
+        });
+
+        // Loading classic notebook extensions.
+        {% if 'jupyter-vuetify/extension' in resources.nbextensions -%}
+        window.enable_nbextensions = true;
+        {% endif -%}
+        requirejs.config({
+            baseUrl: '{{root_path}}/static/',
+            waitSeconds: 3000,
+            map: {
+                '*': {
+                        {% if 'jupyter-vue/extension' in resources.nbextensions -%}
+        'jupyter-vue': 'nbextensions/jupyter-vue/nodeps',
+            {% endif -%}
+        {% if 'jupyter-vuetify/extension' in resources.nbextensions -%}
+        'jupyter-vuetify': 'nbextensions/jupyter-vuetify/nodeps',
+            {% endif -%}
+                    },
+                }
+            });
+        requirejs([
+            {% for ext in resources.nbextensions if ext != 'jupyter-vuetify/extension' and ext != 'jupyter-vue/extension' -%}
+        "{{root_path}}/static/nbextensions/{{ ext }}.js",
+            {% endfor %}
+        ]);
+        (async function () {
+            await Promise.all([
+                solaraInit('solara-main')
+            ]);
+        })();
+
+    </script>
+
+</html>

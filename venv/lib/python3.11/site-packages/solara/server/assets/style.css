@@ -1,0 +1,115 @@
+.jupyter-widgets code {
+    /* background-color: unset; */
+    /* padding: 10px; */
+}
+
+code::after,
+code::before {
+    content: unset !important;
+}
+
+.vuetify-styles .v-application code,
+.v-application code {
+    color: unset !important;
+    background-color: unset !important;
+    /* font-family: Hack !important; */
+    font-size: 14px !important;
+    font-weight: 400 !important;
+    box-shadow: unset !important;
+}
+
+div.highlight pre code {
+    /* box-shadow: 0 2px 1px -1px rgb(0 0 0 / 20%), 0 1px 1px 0 rgb(0 0 0 / 14%), 0 1px 3px 0 rgb(0 0 0 / 12%); */
+    /* border: 1px #333 solid; */
+}
+
+.emojione {
+    width: 1.2em;
+}
+
+
+.solara-progress .v-progress-linear,
+.solara-progress .v-progress-circular,
+.solara-progress .v-progress-circular__overlay {
+    transition: none !important
+}
+
+
+/* see https://github.com/mariobuikhuizen/voila-vuetify/commit/70441763d9039dff2fe044f61a7651769a2151d4 */
+.v-application * {
+    box-sizing: border-box;
+}
+
+
+.solara-markdown img {
+    max-width: 100%;
+}
+
+.solara-markdown {
+    max-width: 1024px;
+    padding-top: 10px;
+}
+
+
+div.solara-markdown-output>.v-messages {
+    font-style: italic;
+    margin-top: 10px;
+}
+
+div.solara-markdown-output {
+    padding: 30px;
+    margin-top: 15px;
+    margin-bottom: 15px;
+}
+
+
+div.highlight {
+    background-color: #eee;
+    padding: 30px;
+    border-radius: 20px;
+    margin-top: 15px;
+    margin-bottom: 15px;
+}
+
+.solara-markdown pre,
+.solara-markdown .jp-RenderedHTMLCommon pre {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.solara-markdown pre {
+    background-color: unset !important
+}
+
+.jp-OutputArea-prompt {
+    display: none;
+}
+
+/* See https://github.com/jupyter-widgets/ipywidgets/issues/3692
+  TODO: this fixes the cursor in Solara, but not in the notebook
+*/
+.solara-image {
+    cursor: unset !important;
+}
+
+@keyframes solara-fade-in {
+    0% {
+        opacity: 0.2;
+    }
+
+    100% {
+        opacity: 1.0;
+    }
+}
+
+.solara-page-loading .solara-content-main {
+    opacity: 0.2;
+}
+
+.solara-content-main {
+    animation: solara-fade-in 0.5s ease;
+}
+
+.solara-autorouter-content {
+    height: 100%;
+}
